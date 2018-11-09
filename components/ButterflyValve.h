@@ -1,6 +1,13 @@
 //
 // Created by mehdi on 11/9/18.
-//
+// simple Butterfly valve : Flow = Cv * sqrt(Delta_P)
+// NOTE: Constructor needs Cv vs. %Opening as two std::vectors with at
+//       least 3 members.
+// Example:
+//              std::vector<double>   cv_percentages {0,  20 ,50 ,80 ,100};
+//              std::vector<double>   cvs            {0,  4, 44, 135, 159};
+//              components::ButterflyValve   bv(cv_percentages, cvs);
+// NOTE: Values of 0% and 100% MUST be in the vectors.
 
 #ifndef ENGINE_SIM_BUTTERFLYVALVE_H
 #define ENGINE_SIM_BUTTERFLYVALVE_H
