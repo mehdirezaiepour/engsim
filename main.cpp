@@ -10,5 +10,6 @@
 int main()
 {
     test_ButterflyValve();
+    test_Crankshaft();
     return 0;
 }

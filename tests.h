@@ -6,8 +6,12 @@
 #define ENGINE_SIM_TESTS_H
 
 #include "ButterflyValve.h"
+#include "Crankshaft.h"
+#include "EngineInfo.h"
+
 
 void test_ButterflyValve();
+void test_Crankshaft();
 
 
 
