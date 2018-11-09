@@ -8,43 +8,74 @@
 #include "utility.h"
 //
 #include <vector>
+#include <cassert>
 //
-class ButterflyValve
-{
-public:
-    ButterflyValve( std::vector<double> cv_percentages, std::vector<double> cvs)
-          : cvs_(std::move(cvs)), cv_percentages_(std::move(cv_percentages)) {
-        // TODO : ASSERT : opening percentages has to be ascending and starting from 0. and ending to 100.
-    }
-    //
-    const double& open_percent() const { return open_percent_;}
-    double& open_percent()  { return open_percent_;}
-    //
-    const double& inlet_p() const { return inlet_p_;}
-    double& inlet_p() { return inlet_p_;}
-    //
-    const double& outlet_p() const { return outlet_p_;}
-    double& outlet_p() { return outlet_p_;}
-    //
-    const double& delta_p() const { return delta_p_;}
-    double& delta_p() { return delta_p_;}
-    //
-    double flow_qm_p_s() const {
-        const double cv = regression_approx(open_percent_, cv_percentages_,  cv_percentages_);
-        return cv * std::sqrt(delta_p_);
-    }
-    void flow_qm_p_s_vary_inlet_p(double flow_qm_p_s) {}
-    void flow_qm_p_s_vary_outlet_p(double flow_qm_p_s) { }
-    void flow_qm_p_s_vary_open_percent(double flow_qm_p_s) { }
-    //
+namespace components{
 
-private:
-    std::vector<double> cvs_;
-    std::vector<double> cv_percentages_;
-    double open_percent_ = 0;
-    double inlet_p_ = 0;
-    double outlet_p_ = 0;
-    double delta_p_ = 0;
-};
+#define  MIN_NUMBER_OF_CV_PERCENTAGE_PAIRS 3
+
+    class ButterflyValve
+    {
+    public:
+        ButterflyValve( std::vector<double> opening_percentages,
+                        std::vector<double> cvs)
+                : cvs_(std::move(cvs)),
+                  opening_percentages_(std::move(opening_percentages)) {
+            assert(cvs_.size() == opening_percentages_.size()
+                   && "Size of 'opening_percentages' and 'cvs' has to be the same");
+            assert(cvs_.size() >= MIN_NUMBER_OF_CV_PERCENTAGE_PAIRS
+                   && "Minimum acceptable number of 'opening_percentages' and "
+                   && "'cvs' pairs is 3.");
+            assert(opening_percentages_[0] == 0.
+                   && opening_percentages_[opening_percentages_.size()-1] == 100.
+                   && "opening_percentages_ has to starts from 0. and ends at 100.");
+
+        }
+        //
+        const double& open_percent() const { return open_percent_;}
+        void open_percent(const double value)  { open_percent_ = value;}
+        //
+        const double& inlet_p() const { return inlet_p_;}
+        void inlet_p(const double value) {
+            inlet_p_ = value;
+        }
+        //
+        const double& outlet_p() const { return outlet_p_;}
+        void outlet_p(const double value) {
+            outlet_p_ = value;
+        }
+        //
+        const double delta_p() const { return inlet_p_ - outlet_p_;}
+        //
+        double flow_qm_p_s() const {
+            const double cv = util::regression_approx(open_percent_,
+                                                      opening_percentages_,
+                                                      cvs_);
+            return cv * std::sqrt(inlet_p_ - outlet_p_);
+        }
+        void flow_qm_p_s_vary_inlet_p(double flow_qm_p_s) {}
+        void flow_qm_p_s_vary_outlet_p(double flow_qm_p_s) { }
+        void flow_qm_p_s_vary_open_percent(double flow_qm_p_s) { }
+        //
+        const double cv() const {
+            return util::regression_approx(open_percent_,
+                                           opening_percentages_,
+                                           cvs_);
+        }
+        //
+
+    private:
+        std::vector<double> cvs_;
+        std::vector<double> opening_percentages_;
+        double open_percent_ = 0;
+        double inlet_p_ = 0;
+        double outlet_p_ = 0;
+    };
+
+
+}
+
+
+
 
 #endif //ENGINE_SIM_BUTTERFLYVALVE_H

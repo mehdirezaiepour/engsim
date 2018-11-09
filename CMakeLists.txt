@@ -8,5 +8,5 @@ include_directories(components)
 add_executable(engine_sim
                    main.cpp
         components/ButterflyValve.cpp
-        components/ButterflyValve.h
-        components/utility.h)
+#        components/ButterflyValve.h
+        components/utility.h components/utility.cpp tests.cpp tests.h)
