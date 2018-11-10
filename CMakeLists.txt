@@ -23,8 +23,8 @@ add_executable(engine_sim
         tests.h
                 components/ButterflyValve.cpp
                 components/ButterflyValve.h
-                components/utility.h
-                components/utility.cpp
+        components/utilities.h
+        components/utilities.cpp
                 components/Crankshaft.cpp
                 components/Crankshaft.h
                 components/CombustionChamber.cpp
@@ -34,6 +34,6 @@ add_executable(engine_sim
                 components/EngineInfo.cpp
                 components/EngineInfo.h
                 components/SolverInfo.cpp
-                components/SolverInfo.h)
+                components/SolverInfo.h components/Constants.cpp components/Constants.h)
 
 

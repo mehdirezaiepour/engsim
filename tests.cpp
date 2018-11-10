@@ -1,9 +1,11 @@
 //
 // Created by mehdi on 11/9/18.
 //
-#include "utility.h"
+#include "utilities.h"
 #include "tests.h"
+//
 #include <cmath>
+//
 void test_ButterflyValve(){
     std::vector<double> cv_percentages {0,  20 ,50 ,80 ,100};
     std::vector<double> cvs {0,  4, 44, 135, 159};
@@ -21,12 +23,23 @@ void test_ButterflyValve(){
 
 
 void test_Crankshaft(){
+    // NISSAN Z24/Z24i
     EngineInfo<4> info;
-    info.stroke = 1.0;
-    info.connecting_rod_length = 0;
-    info.cylinder_volume = 0;
-    info.crank_pins_rel_positions = {};
+    info.stroke =                  96.012  * Constants::MiliMeter;
+    info.connecting_rod_length =   165.0   * Constants::MiliMeter;
+    info.cylinder_volume =  0.25 * 2389.0  * Constants::CC;
+    info.crank_pins_rel_positions = INLINE_4_CYL;
+    std::cout << "\nINLINE_4_CYL  = " << std::array<double, 4>( INLINE_4_CYL);
     info.crankeshaft_weight = 1.0;
-    Crankshaft<4> cs(INLINE_4_CYL);
+    Crankshaft<4> cs(info);
+    cs.set_rotation_rate_rps(30);
     std::cout << cs;
+    for(std::size_t i = 0; i < 10; ++i)
+    {
+        std::cout << "_________________________________________________________"
+                  << std::endl;
+        cs.update_all();
+        cs.report_print();
+    }
+
 }

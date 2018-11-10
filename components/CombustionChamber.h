@@ -11,12 +11,14 @@
 class CombustionChamber
 {
 public:
-    CombustionChamber(double volume, double stroke, double connecting_rod_length)
+    CombustionChamber(double volume, double stroke, double connecting_rod_length, int id)
         : charge_efficiency_(1.0),
           volume_(volume),
           stroke_(stroke),
           cur_height_(0.0),
-          connecting_rod_length_(connecting_rod_length)
+          cur_pressure_(0.0),
+          connecting_rod_length_(connecting_rod_length),
+          id_(id)
           {}
     double ideal_combs_force(){
         // TODO : Use a combustion model here
@@ -35,11 +37,18 @@ public:
     void cur_height(const double& cur_height) {
         cur_height_ = cur_height;
     }
-
+    inline const double& connecting_rod_length(){
+        return connecting_rod_length_;
+    }
     friend std::ostream &operator<<(std::ostream &os, const CombustionChamber &chamber) {
-        os << "charge_efficiency_: " << chamber.charge_efficiency_ << " volume_: " << chamber.volume_ << " stroke_: "
-           << chamber.stroke_ << " cur_height_: " << chamber.cur_height_ << " connecting_rod_length_: "
-           << chamber.connecting_rod_length_;
+        os  << "\n     ID = "      << chamber.id_
+            << "\n     charge_efficiency_: "     << chamber.charge_efficiency_
+            << "\n     volume_: "                << chamber.volume_
+            << "\n     stroke_: "                << chamber.stroke_
+            << "\n     cur_height_: "            << chamber.cur_height_
+            << "\n     cur_pressure_: "          << chamber.cur_pressure_
+            << "\n     connecting_rod_length_: " << chamber.connecting_rod_length_
+            << "\n";
         return os;
     }
 
@@ -49,7 +58,9 @@ private:
     double volume_;
     double stroke_;
     double cur_height_;
+    double cur_pressure_;
     double connecting_rod_length_;
+    int id_;
 
 };
 

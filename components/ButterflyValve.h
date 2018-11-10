@@ -12,7 +12,7 @@
 #ifndef ENGINE_SIM_BUTTERFLYVALVE_H
 #define ENGINE_SIM_BUTTERFLYVALVE_H
 //
-#include "utility.h"
+#include "utilities.h"
 //
 #include <vector>
 #include <cassert>

@@ -13,15 +13,17 @@
 class CrankPin
 {
 public:
-    CrankPin(double cylender_volume, double stroke, double connecting_rod_length)
-            :  combs_chamber_(CombustionChamber(cylender_volume, stroke, connecting_rod_length))
+    CrankPin(double cylender_volume, double stroke, double connecting_rod_length, int id)
+            :  combs_chamber_(CombustionChamber(cylender_volume, stroke, connecting_rod_length, id))
     { }
     CrankPin()
-            :  combs_chamber_(CombustionChamber(0.0, 0.0, 0.0))
+            :  combs_chamber_(CombustionChamber(0.0, 0.0, 0.0, 0))
     { }
 
     friend std::ostream &operator<<(std::ostream &os, const CrankPin &pin) {
-        os << "combs_chamber_: " << pin.combs_chamber_;
+        os  << "\n"
+            << "combs_chamber_:\n"
+            << "      " <<pin.combs_chamber_;
         return os;
     }
 

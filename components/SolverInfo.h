@@ -5,11 +5,12 @@
 #ifndef ENGINE_SIM_SOLVERINFO_H
 #define ENGINE_SIM_SOLVERINFO_H
 
+#include "Constants.h"
 
 class SolverInfo
 {
 public:
-    static constexpr double time_step = 0.001;
+    static constexpr double time_step = 1 * Constants::MiliSecond;
 };
 
 

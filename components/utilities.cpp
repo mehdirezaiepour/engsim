@@ -1,7 +1,7 @@
 //
 // Created by mehdi on 11/9/18.
 //
-#include "utility.h"
+#include "utilities.h"
 
 namespace util {
 // free functions:
@@ -49,26 +49,26 @@ namespace util {
     }
 
 } // namespace util
-//
-//template <class T>
-//std::ostream& operator << (std::ostream& ost, const std::vector<T>& v){
-//    ost << "[  ";
-//    for(auto a : v)
-//    {
-//        ost << a << "  ";
-//    }
-//    ost << "]";
-//    return ost;
-//}
-//
-//template<class T1, typename T2, T2 Num_Elements>
-//std::ostream &operator << (std::ostream &ost, const std::array<T1, Num_Elements>& v) {
-//    ost << "[  ";
-//    for(auto a : v)
-//    {
-//        ost << a << "  ";
-//    }
-//    ost << "]";
-//    return ost;
-//}
-//
+
+template <class T>
+std::ostream& operator << (std::ostream& ost, const std::vector<T>& v){
+    ost << "[  ";
+    for(auto a : v)
+    {
+        ost << a << "  ";
+    }
+    ost << "]";
+    return ost;
+}
+
+template<class T1, std::size_t Num_Elements>
+std::ostream &operator << (std::ostream &ost, const std::array<T1, Num_Elements>& v) {
+    ost << "[  ";
+    for(auto a : v)
+    {
+        ost << a << "  ";
+    }
+    ost << "]";
+    return ost;
+}
+

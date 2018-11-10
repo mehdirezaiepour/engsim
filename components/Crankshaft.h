@@ -5,33 +5,32 @@
 #ifndef ENGINE_SIM_CRANKSHAFT_H
 #define ENGINE_SIM_CRANKSHAFT_H
 
-#include "utility.h"
+#include "utilities.h"
 #include "EngineInfo.h"
 #include "CrankPin.h"
 #include "SolverInfo.h"
+#include "Constants.h"
 
 #include <array>
 #include <vector>
 #include <cmath>
 #include <ostream>
 
-#define INLINE_4_CYL  {0.0, M_1_PI, M_1_PI, 0.0}
+#define INLINE_4_CYL  {0.0, M_PI, M_PI, 0.0}
 
 
 
-//
-//template<typename T, size_t Num_Elements>
-//std::ostream &operator << (std::ostream &ost, const std::array<T, Num_Elements>& v) {
-//    ost << "[  ";
-//    for(auto a : v)
-//    {
-//        ost << a << "  ";
-//    }
-//    ost << "]";
-//}
-//
-//
-//
+// TODO : Why it does not work in the utilities.h ???!
+template<class T1, std::size_t Num_Elements>
+std::ostream &operator << (std::ostream &ost, const std::array<T1, Num_Elements>& v) {
+    ost << "[  ";
+    for(auto a : v)
+    {
+        ost << a << "  ";
+    }
+    ost << "]";
+    return ost;
+}
 
 
 template <std::size_t Num_Crank_Pins>
@@ -54,12 +53,12 @@ public:
                 crank_rotation_rps_(0.0),
                 sum_torques_     (0.0),
                 sum_torques_old_ (0.0),
-                diameter_(stroke_ / 2.0),
+                radius_(e_info.stroke / 2.0),
                 stroke_(e_info.stroke),
                 weight_(e_info.crankeshaft_weight),
                 friction_torque_        (0.0),
                 static_friction_torque_ (0.0),
-                time_step_   (SolverInfo::time_step),
+                time_step_ (SolverInfo::time_step),
                 crank_pins_( crank_pins_maker( e_info.crank_pins_rel_positions,
                                                e_info.cylinder_volume,
                                                e_info.stroke,
@@ -69,19 +68,73 @@ public:
     //
     void update_all(){
         calc_torques();
-        crank_cur_position_ += crank_rotation_rps_ * time_step_;
-    }
+        crank_cur_position_ += crank_rotation_rps_ * Constants::Pi_m_2
+                               * time_step_;
+        if(crank_cur_position_ >= Constants::Pi_m_8) {
+            crank_cur_position_ -= Constants::Pi_m_4;
+        }
 
+        for(std::size_t i = 0; i < Num_Crank_Pins; ++i){
+            crank_pins_cur_positions_[i] = crank_cur_position_
+                    + crank_pins_rel_positions_[i];
+            const double r_cos_w = radius_ * cos(crank_pins_cur_positions_[i]);
+            const double sin_p   = sin(crank_pins_cur_positions_[i]);
+            const double sqrt_l2_min_r2_mult_sin2_p =
+                    sqrt(
+                          crank_pins_[i].combs_chamber_.connecting_rod_length()
+                          * crank_pins_[i].combs_chamber_.connecting_rod_length()
+                          - radius_ * radius_ * sin_p * sin_p
+                         );
+            crank_pins_[i].combs_chamber_.cur_height(
+                       crank_pins_[i].combs_chamber_.connecting_rod_length()
+                        + radius_
+                       - (r_cos_w + sqrt_l2_min_r2_mult_sin2_p)   );
+        }
+    }
+    //
     void calc_torques(){
         sum_torques_old_ = sum_torques_;
         sum_torques_ = 0.0;
-        for(int i = 0; i < Num_Crank_Pins; ++i)
+        for(std::size_t i = 0; i < Num_Crank_Pins; ++i)
         {
             sum_torques_ += crank_pins_[i].combs_chamber_.ideal_combs_force()
-                    * diameter_* sin(crank_pins_cur_positions_[i]);
+                    * radius_* sin(crank_pins_cur_positions_[i]);
         }
 
     }
+    //
+    void set_rotation_rate_rps(double rot_r)
+    {
+        crank_rotation_rps_ = rot_r;
+    }
+    //
+    void report_print(){
+        std::array<double, Num_Crank_Pins> comb_chamb_heights;
+        for(std::size_t i = 0; i < Num_Crank_Pins; ++i) {
+            comb_chamb_heights[i] = crank_pins_[i].combs_chamber_.cur_height();
+        }
+        std::cout
+           << "\n"
+           << "crank_rotation_rps_ = "
+           << crank_rotation_rps_
+           << "\n"
+           << "crank_cur_position_ = "
+           << crank_cur_position_
+           << "\n"
+           << "crank_pins_cur_positions_ = "
+           << crank_pins_cur_positions_
+           << "\n"
+           << "comb_chamb_heights = "
+           << comb_chamb_heights
+           << "\n"
+           << "sum_torques_ = "
+           << sum_torques_
+           << "\n"
+           << "friction_torque_ = "
+           << friction_torque_
+           << std::endl;
+    }
+    //
     template <std::size_t Number_Of_Crank_Pins>
     friend std::ostream &operator<<(std::ostream &os,
             const Crankshaft<Number_Of_Crank_Pins> &crankshaft);
@@ -93,7 +146,7 @@ private:
     double crank_rotation_rps_;
     double sum_torques_;
     double sum_torques_old_;
-    double diameter_;
+    double radius_;
     double stroke_;
     double weight_;
     double friction_torque_;
@@ -114,10 +167,9 @@ crank_pins_maker( std::array<double , Num_Crank_Pins> crank_pins_rel_positions_,
                   double stroke,
                   double connecting_rod_length){
     std::array<CrankPin,  Num_Crank_Pins> c_pins;
-    for(CrankPin cp : c_pins){
-        cp = CrankPin( cylinder_volume,  stroke,  connecting_rod_length);
-        cp.combs_chamber_.cur_height(0.0);
-
+    for(std::size_t id = 0; id < c_pins.size(); ++id){
+        c_pins[id] = CrankPin( cylinder_volume,  stroke,  connecting_rod_length, id);
+        c_pins[id].combs_chamber_.cur_height(0.0);
     }
     return c_pins;
 }
@@ -125,21 +177,24 @@ crank_pins_maker( std::array<double , Num_Crank_Pins> crank_pins_rel_positions_,
 //
 template <std::size_t Number_Of_Crank_Pins>
 std::ostream &operator<<(std::ostream &os,
-        const Crankshaft<Number_Of_Crank_Pins> &crankshaft) {
-    // os  << "crank_pins_rel_positions_: " << crankshaft.crank_pins_rel_positions_
-       // << " crank_pins_cur_positions_: " << crankshaft.crank_pins_cur_positions_
-            ;std::cout<< " crank_cur_position_: " << crankshaft.crank_cur_position_
-            ;std::cout<< " crank_rotation_rps_: " << crankshaft.crank_rotation_rps_
-            ;std::cout<< " sum_torques_: " << crankshaft.sum_torques_
-            ;std::cout<< " sum_torques_old_: " << crankshaft.sum_torques_old_
-            ;std::cout<< " diameter_: " << crankshaft.diameter_
-            ;std::cout<< " stroke_: " << crankshaft.stroke_
-            ;std::cout<< " weight_: " << crankshaft.weight_
-            ;std::cout<< " friction_torque_: " << crankshaft.friction_torque_
-            ;std::cout<< " static_friction_torque_: " << crankshaft.static_friction_torque_
-            ;std::cout<< " time_step_: " << crankshaft.time_step_
-            ;//std::cout<< " crank_pins_: " << crankshaft.crank_pins_;
+                         const Crankshaft<Number_Of_Crank_Pins> &crankshaft) {
+    os << "\nCrankshaft :"
+       << "\n     crank_pins_rel_positions_: " << crankshaft.crank_pins_rel_positions_
+       << "\n     crank_pins_cur_positions_: " << crankshaft.crank_pins_cur_positions_
+       << "\n     crank_cur_position_: " << crankshaft.crank_cur_position_
+       << "\n     crank_rotation_rps_: " << crankshaft.crank_rotation_rps_
+       << "\n     sum_torques_: " << crankshaft.sum_torques_
+       << "\n     sum_torques_old_: " << crankshaft.sum_torques_old_
+       << "\n     radius_: " << crankshaft.radius_
+       << "\n     stroke_: " << crankshaft.stroke_
+       << "\n     weight_: " << crankshaft.weight_
+       << "\n     friction_torque_: " << crankshaft.friction_torque_
+       << "\n     static_friction_torque_: " << crankshaft.static_friction_torque_
+       << "\n     time_step_: " << crankshaft.time_step_
+       << "\n     crank_pins_: " << crankshaft.crank_pins_
+       << "\n";
     return os;
+
 }
 
 #endif //ENGINE_SIM_CRANKSHAFT_H

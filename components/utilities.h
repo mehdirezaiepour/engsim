@@ -2,8 +2,8 @@
 // Created by mehdi on 11/9/18.
 //
 
-#ifndef ENGINE_SIM_UTILITY_H
-#define ENGINE_SIM_UTILITY_H
+#ifndef ENGINE_SIM_UTILITIES_H
+#define ENGINE_SIM_UTILITIES_H
 //
 
 //
@@ -21,7 +21,8 @@ namespace util{
 template <class T>
 std::ostream& operator << (std::ostream& ost, const std::vector<T>& v);
 
-template<class T1, typename T2, T2 Num_Elements>
-std::ostream& operator << (std::ostream& ost, const std::array<T1, Num_Elements>& v);
 
-#endif //ENGINE_SIM_UTILITY_H
+template<class T1, std::size_t Num_Elements>
+std::ostream &operator << (std::ostream &ost, const std::array<T1, Num_Elements>& v);
+
+#endif //ENGINE_SIM_UTILITIES_H
