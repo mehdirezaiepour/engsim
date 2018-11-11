@@ -50,12 +50,13 @@ public:
             :   crank_pins_rel_positions_(e_info.crank_pins_rel_positions),
                 crank_pins_cur_positions_(e_info.crank_pins_rel_positions),
                 crank_cur_position_(0.0),
-                crank_rotation_rps_(0.0),
+                crank_rotation_rad_per_s_(0.0),
                 sum_torques_     (0.0),
                 sum_torques_old_ (0.0),
                 radius_(e_info.stroke / 2.0),
                 stroke_(e_info.stroke),
                 weight_(e_info.crankeshaft_weight),
+                system_inertia_(e_info.system_inertia),
                 friction_torque_        (0.0),
                 static_friction_torque_ (0.0),
                 time_step_ (SolverInfo::time_step),
@@ -68,27 +69,26 @@ public:
     //
     void update_all(){
         calc_torques();
-        crank_cur_position_ += crank_rotation_rps_ * Constants::Pi_m_2
-                               * time_step_;
-        if(crank_cur_position_ >= Constants::Pi_m_8) {
-            crank_cur_position_ -= Constants::Pi_m_4;
-        }
+        update_rotation_rad_p_s();
+        update_positions();
+    }
+    //
+    void update_rotation_rad_p_s(){
+        // TODO : Write a better model for it!
+        crank_rotation_rad_per_s_ += (sum_torques_ + sum_torques_old_)/ (2.0 * system_inertia_);
+    }
+    //
+    void update_positions(){
+        crank_cur_position_ += crank_rotation_rad_per_s_ * time_step_;
+        crank_cur_position_ = fmod(crank_cur_position_, 2.0 * Constants::Angle_Turn);
 
         for(std::size_t i = 0; i < Num_Crank_Pins; ++i){
-            crank_pins_cur_positions_[i] = crank_cur_position_
-                    + crank_pins_rel_positions_[i];
-            const double r_cos_w = radius_ * cos(crank_pins_cur_positions_[i]);
-            const double sin_p   = sin(crank_pins_cur_positions_[i]);
-            const double sqrt_l2_min_r2_mult_sin2_p =
-                    sqrt(
-                          crank_pins_[i].combs_chamber_.connecting_rod_length()
-                          * crank_pins_[i].combs_chamber_.connecting_rod_length()
-                          - radius_ * radius_ * sin_p * sin_p
-                         );
-            crank_pins_[i].combs_chamber_.cur_height(
-                       crank_pins_[i].combs_chamber_.connecting_rod_length()
-                        + radius_
-                       - (r_cos_w + sqrt_l2_min_r2_mult_sin2_p)   );
+            crank_pins_cur_positions_[i] =
+                    crank_cur_position_ + crank_pins_rel_positions_[i];
+
+            crank_pins_[i].combs_chamber_
+                          .cur_position(crank_pins_cur_positions_[i]);
+
         }
     }
     //
@@ -105,7 +105,7 @@ public:
     //
     void set_rotation_rate_rps(double rot_r)
     {
-        crank_rotation_rps_ = rot_r;
+        crank_rotation_rad_per_s_ = rot_r;
     }
     //
     void report_print(){
@@ -115,8 +115,8 @@ public:
         }
         std::cout
            << "\n"
-           << "crank_rotation_rps_ = "
-           << crank_rotation_rps_
+           << "crank_rotation_rad_per_s_ = "
+           << crank_rotation_rad_per_s_
            << "\n"
            << "crank_cur_position_ = "
            << crank_cur_position_
@@ -143,12 +143,13 @@ private:
     std::array<double, Num_Crank_Pins> crank_pins_rel_positions_;
     std::array<double, Num_Crank_Pins> crank_pins_cur_positions_;
     double crank_cur_position_;
-    double crank_rotation_rps_;
+    double crank_rotation_rad_per_s_;
     double sum_torques_;
     double sum_torques_old_;
     double radius_;
     double stroke_;
     double weight_;
+    double system_inertia_;
     double friction_torque_;
     double static_friction_torque_;
     double time_step_;
@@ -182,12 +183,13 @@ std::ostream &operator<<(std::ostream &os,
        << "\n     crank_pins_rel_positions_: " << crankshaft.crank_pins_rel_positions_
        << "\n     crank_pins_cur_positions_: " << crankshaft.crank_pins_cur_positions_
        << "\n     crank_cur_position_: " << crankshaft.crank_cur_position_
-       << "\n     crank_rotation_rps_: " << crankshaft.crank_rotation_rps_
+       << "\n     crank_rotation_rad_per_s_: " << crankshaft.crank_rotation_rad_per_s_
        << "\n     sum_torques_: " << crankshaft.sum_torques_
        << "\n     sum_torques_old_: " << crankshaft.sum_torques_old_
        << "\n     radius_: " << crankshaft.radius_
        << "\n     stroke_: " << crankshaft.stroke_
        << "\n     weight_: " << crankshaft.weight_
+       << "\n     system_inertia_: " << crankshaft.system_inertia_
        << "\n     friction_torque_: " << crankshaft.friction_torque_
        << "\n     static_friction_torque_: " << crankshaft.static_friction_torque_
        << "\n     time_step_: " << crankshaft.time_step_

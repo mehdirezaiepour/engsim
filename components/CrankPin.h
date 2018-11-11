@@ -13,8 +13,8 @@
 class CrankPin
 {
 public:
-    CrankPin(double cylender_volume, double stroke, double connecting_rod_length, int id)
-            :  combs_chamber_(CombustionChamber(cylender_volume, stroke, connecting_rod_length, id))
+    CrankPin(double cylinder_volume, double stroke, double connecting_rod_length, int id)
+            :  combs_chamber_(CombustionChamber(cylinder_volume, stroke, connecting_rod_length, id))
     { }
     CrankPin()
             :  combs_chamber_(CombustionChamber(0.0, 0.0, 0.0, 0))

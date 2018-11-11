@@ -6,7 +6,7 @@
 // Example:
 //              std::vector<double>   cv_percentages {0,  20 ,50 ,80 ,100};
 //              std::vector<double>   cvs            {0,  4, 44, 135, 159};
-//              components::ButterflyValve   bv(cv_percentages, cvs);
+//              components::Valve   bv(cv_percentages, cvs);
 // NOTE: Values of 0% and 100% MUST be in the vectors.
 
 #ifndef ENGINE_SIM_BUTTERFLYVALVE_H
@@ -21,10 +21,10 @@ namespace components{
 
 #define  MIN_NUMBER_OF_CV_PERCENTAGE_PAIRS 3
 
-    class ButterflyValve
+    class Valve
     {
     public:
-        ButterflyValve( std::vector<double> opening_percentages,
+        Valve( std::vector<double> opening_percentages,
                         std::vector<double> cvs)
                 : cvs_(std::move(cvs)),
                   opening_percentages_(std::move(opening_percentages)) {
